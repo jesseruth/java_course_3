@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * Implementation of DaoFactory that creates a FileAccountDao instance.
  */
 public class FileDaoFactory implements DaoFactory {
-    static Logger logger = LoggerFactory.getLogger(FileDaoFactory.class);
+    final static Logger logger = LoggerFactory.getLogger(FileDaoFactory.class);
 
     /**
      * Instantiates an instance of FileAccountDao.
@@ -20,14 +20,13 @@ public class FileDaoFactory implements DaoFactory {
      */
     @Override
     public AccountDao getAccountDao() throws DaoFactoryException {
-        FileAccountDao fileAccountDao;
         try {
-            fileAccountDao = new FileAccountDao();
+            return new FileAccountDao();
         } catch (Exception e) {
             final String message = "Unable to create new Account Dao";
             logger.error(message, e);
             throw new DaoFactoryException(message);
         }
-        return fileAccountDao;
+
     }
 }

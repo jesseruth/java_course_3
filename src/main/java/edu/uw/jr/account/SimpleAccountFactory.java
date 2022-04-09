@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * @author Jesse Ruth
  */
 public class SimpleAccountFactory implements AccountFactory {
-    static Logger logger = LoggerFactory.getLogger(SimpleAccountFactory.class);
+    final static Logger logger = LoggerFactory.getLogger(SimpleAccountFactory.class);
 
     /**
      * Instantiations an instance of SimpleAccount.
@@ -23,9 +23,9 @@ public class SimpleAccountFactory implements AccountFactory {
      * @return the newly instantiated account, or null if unable to instantiate the account
      */
     @Override
-    public Account newAccount(final String accountName, final byte[] hashedPassword, int initialBalance) {
+    public Account newAccount(final String accountName, final byte[] hashedPassword,final  int initialBalance) {
         if (initialBalance < 1000 * 100) return null;
-        Account account = new SimpleAccount();
+        final Account account = new SimpleAccount();
         account.setBalance(initialBalance);
         try {
             account.setName(accountName);

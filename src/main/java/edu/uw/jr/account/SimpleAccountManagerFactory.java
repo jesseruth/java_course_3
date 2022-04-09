@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * @author Jesse Ruth
  */
 public class SimpleAccountManagerFactory implements AccountManagerFactory {
-    static Logger logger = LoggerFactory.getLogger(SimpleAccountManagerFactory.class);
+    final static Logger logger = LoggerFactory.getLogger(SimpleAccountManagerFactory.class);
 
     /**
      * Instantiates a new SimpleAccountManager instance.
@@ -21,7 +21,7 @@ public class SimpleAccountManagerFactory implements AccountManagerFactory {
      * @return a newly instantiated SimpleAccountManager
      */
     @Override
-    public AccountManager newAccountManager(AccountDao accountDao) {
+    public AccountManager newAccountManager(final AccountDao accountDao) {
         logger.info("Creating a new AccountManager");
         return new SimpleAccountManager(accountDao);
     }

@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Jesse Ruth
  */
 public class SimpleAddress implements Address {
-    static Logger logger = LoggerFactory.getLogger(Address.class);
-
+    final static Logger logger = LoggerFactory.getLogger(Address.class);
     private String streetAddress;
     private String city;
     private String state;

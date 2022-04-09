@@ -184,7 +184,7 @@ public class SimpleAccount implements Account {
      * @param phone value for the account phone number
      */
     @Override
-    public void setPhone(String phone) {
+    public void setPhone(final String phone) {
         this.phone = phone;
     }
 
@@ -204,7 +204,7 @@ public class SimpleAccount implements Account {
      * @param email the email address
      */
     @Override
-    public void setEmail(String email) {
+    public void setEmail(final String email) {
         this.email = email;
     }
 

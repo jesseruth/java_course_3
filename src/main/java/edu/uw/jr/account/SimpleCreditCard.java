@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Jesse Ruth
  */
 public class SimpleCreditCard implements CreditCard {
-    static Logger logger = LoggerFactory.getLogger(SimpleCreditCard.class);
+    final static Logger logger = LoggerFactory.getLogger(SimpleCreditCard.class);
 
     private String issuer;
     private String type;

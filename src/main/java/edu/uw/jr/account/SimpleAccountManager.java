@@ -14,8 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @author Jesse Ruth
  */
 public class SimpleAccountManager implements AccountManager {
-    static Logger logger = LoggerFactory.getLogger(SimpleAccountManager.class);
-
+    static final Logger logger = LoggerFactory.getLogger(SimpleAccountManager.class);
     private final edu.uw.ext.framework.dao.AccountDao dao;
     private final SimpleAccountFactory simpleAccountFactory = new SimpleAccountFactory();
 
@@ -24,7 +23,7 @@ public class SimpleAccountManager implements AccountManager {
      *
      * @param dao the DAO to use for persistence
      */
-    public SimpleAccountManager(edu.uw.ext.framework.dao.AccountDao dao) {
+    public SimpleAccountManager(final edu.uw.ext.framework.dao.AccountDao dao) {
         logger.info("Creates a new Simple account manager");
         this.dao = dao;
     }
@@ -86,7 +85,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if error occurs accessing accounts
      */
     @Override
-    public boolean validateLogin(String accountName, String password) throws AccountException {
+    public boolean validateLogin(final String accountName, final String password) throws AccountException {
         Account account = dao.getAccount(accountName);
         // TODO: Implement
         if (account == null) {
