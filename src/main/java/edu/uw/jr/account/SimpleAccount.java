@@ -5,17 +5,15 @@ import edu.uw.ext.framework.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 /**
  * Implementation of the Account interface as a JavaBean.
  *
  * @author Jesse Ruth
  */
 public class SimpleAccount implements Account {
+    public static final int MIN_ACCT_LEN = 8;
+    public static final int MIN_ACCOUNT_BALANCE = 1000 * 100;
     static Logger logger = LoggerFactory.getLogger(SimpleAccount.class);
-
     private String accountName;
     private byte[] passwordHash;
     private int balance;
@@ -26,10 +24,6 @@ public class SimpleAccount implements Account {
     private CreditCard creditCard;
     private String fullName;
     private Boolean accountManagerSet = false;
-    public static final int MIN_ACCT_LEN = 8;
-    public static final int MIN_ACCOUNT_BALANCE = 1000 * 100;
-    MessageDigest md;
-
 
     /**
      * No parameter constructor, required by JavaBeans.
@@ -98,13 +92,7 @@ public class SimpleAccount implements Account {
      */
     @Override
     public void setPasswordHash(final byte[] bytes) {
-        try {
-            md = MessageDigest.getInstance("SHA1");
-            md.update(bytes);
-            this.passwordHash = bytes;
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("Unable to store password, no such algorithm", e);
-        }
+        this.passwordHash = bytes;
     }
 
     /**
@@ -251,6 +239,11 @@ public class SimpleAccount implements Account {
      */
     @Override
     public void reflectOrder(final Order order, final int executionPrice) {
-        // TODO: Fill this in!
+        logger.info("reflect order {} \n At Price {}", order, executionPrice);
+        try {
+            accountManager.persist(this);
+        } catch (AccountException e) {
+            logger.error("Unable to persist account", e);
+        }
     }
 }

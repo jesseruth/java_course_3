@@ -7,6 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * A simple account manager that has no persistence, and accepts every login.
@@ -48,7 +51,13 @@ public class SimpleAccountManager implements AccountManager {
      */
     @Override
     public Account getAccount(final String accountName) throws AccountException {
-        return dao.getAccount(accountName);
+        try {
+            return dao.getAccount(accountName);
+        } catch (Exception e) {
+            final String message = "Unable to get account";
+            logger.error(message, e);
+            throw new AccountException(message);
+        }
     }
 
     /**
@@ -73,7 +82,20 @@ public class SimpleAccountManager implements AccountManager {
      */
     @Override
     public Account createAccount(final String accountName, final String password, final int balance) throws AccountException {
-        return simpleAccountFactory.newAccount(accountName, password.getBytes(StandardCharsets.UTF_8), balance);
+        Account account = dao.getAccount(accountName);
+        if (account != null) {
+            throw new AccountException("account already exists");
+        }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            byte[] passwordHash = password.getBytes(StandardCharsets.UTF_8);
+            md.update(passwordHash);
+            account = simpleAccountFactory.newAccount(accountName, passwordHash, balance);
+            persist(account);
+        } catch (NoSuchAlgorithmException e) {
+            logger.error("Unable to store password, no such algorithm", e);
+        }
+        return account;
     }
 
     /**
@@ -86,11 +108,17 @@ public class SimpleAccountManager implements AccountManager {
      */
     @Override
     public boolean validateLogin(final String accountName, final String password) throws AccountException {
-        Account account = dao.getAccount(accountName);
-        // TODO: Implement
-        if (account == null) {
-            throw new AccountException("No Account exists by this name");
+        final Account account = dao.getAccount(accountName);
+        if (account == null) return false;
+        try {
+            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            final byte[] passwordHash = password.getBytes(StandardCharsets.UTF_8);
+            md.update(passwordHash);
+            return Arrays.equals(account.getPasswordHash(), passwordHash);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
+
         return false;
     }
 
