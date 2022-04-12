@@ -240,6 +240,7 @@ public class SimpleAccount implements Account {
     @Override
     public void reflectOrder(final Order order, final int executionPrice) {
         logger.info("reflect order {} \n At Price {}", order, executionPrice);
+        balance += order.valueOfOrder(executionPrice);
         try {
             accountManager.persist(this);
         } catch (AccountException e) {

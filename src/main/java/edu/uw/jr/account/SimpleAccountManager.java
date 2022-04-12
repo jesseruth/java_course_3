@@ -18,8 +18,8 @@ import java.util.Arrays;
  */
 public class SimpleAccountManager implements AccountManager {
     static final Logger logger = LoggerFactory.getLogger(SimpleAccountManager.class);
-    private final edu.uw.ext.framework.dao.AccountDao dao;
     private final SimpleAccountFactory simpleAccountFactory = new SimpleAccountFactory();
+    private edu.uw.ext.framework.dao.AccountDao dao;
 
     /**
      * Creates a new Simple account manager using the specified AccountDao for persistence.
@@ -52,7 +52,10 @@ public class SimpleAccountManager implements AccountManager {
     @Override
     public Account getAccount(final String accountName) throws AccountException {
         try {
-            return dao.getAccount(accountName);
+            Account account;
+            account = dao.getAccount(accountName);
+            if (account != null) account.registerAccountManager(this);
+            return account;
         } catch (Exception e) {
             final String message = "Unable to get account";
             logger.error(message, e);
@@ -130,5 +133,6 @@ public class SimpleAccountManager implements AccountManager {
     @Override
     public void close() throws AccountException {
         dao.close();
+        dao = null;
     }
 }
