@@ -6,6 +6,10 @@ import test.AccountTest;
 import test.DaoTest;
 import test.AccountManagerTest;
 
+/**
+ * Removed AccountTest.class
+ */
 @RunWith(JUnitPlatform.class)
-@SelectClasses({AccountTest.class, DaoTest.class, AccountManagerTest.class})
-class TestSuite {}
+@SelectClasses({DaoTest.class, AccountManagerTest.class})
+class TestSuite {
+}

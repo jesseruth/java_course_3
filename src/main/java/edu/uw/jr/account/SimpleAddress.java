@@ -16,6 +16,8 @@ public class SimpleAddress implements Address {
     private String state;
     private String zipCode;
 
+    public SimpleAddress() {}
+
     /**
      * Gets the street address.
      *

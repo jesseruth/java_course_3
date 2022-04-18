@@ -1,5 +1,6 @@
 package edu.uw.jr.account;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.uw.ext.framework.account.*;
 import edu.uw.ext.framework.order.Order;
 import org.slf4j.Logger;
@@ -17,10 +18,12 @@ public class SimpleAccount implements Account {
     private String accountName;
     private byte[] passwordHash;
     private int balance;
+    @JsonDeserialize(as=SimpleAddress.class)
     private Address address;
     private String phone;
     private String email;
     private AccountManager accountManager;
+    @JsonDeserialize(as=SimpleCreditCard.class)
     private CreditCard creditCard;
     private String fullName;
     private Boolean accountManagerSet = false;

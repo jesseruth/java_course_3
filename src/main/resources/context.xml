@@ -21,6 +21,6 @@
     <bean id="AccountManagerFactory" class="edu.uw.jr.account.SimpleAccountManagerFactory"/>
 
     <!-- Bean providing implementation of edu.uw.ext.framework.account.DaoFactory -->
-    <bean id="DaoFactory" class="edu.uw.jr.dao.FileDaoFactory"/>
+    <bean id="DaoFactory" class="edu.uw.jr.dao.JsonDaoFactory"/>
 
 </beans>

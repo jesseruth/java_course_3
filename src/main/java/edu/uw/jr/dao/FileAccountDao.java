@@ -27,7 +27,7 @@ public class FileAccountDao implements AccountDao, AutoCloseable {
     final File directoryPath = new File(DIRECTORY);
 
     // function to delete subdirectories and files
-    private boolean deleteDirectory(File file) {
+    public static boolean deleteDirectory(File file) {
         // store all the paths of files and folders present
         // inside directory
         for (File subfile : Objects.requireNonNull(file.listFiles())) {
@@ -188,7 +188,7 @@ public class FileAccountDao implements AccountDao, AutoCloseable {
     public void reset() throws AccountException {
         try {
             final List<File> contents = List.of(Objects.requireNonNull(directoryPath.listFiles()));
-            contents.forEach(this::deleteDirectory);
+            contents.forEach(FileAccountDao::deleteDirectory);
         } catch (final Exception e) {
             final String message = "Unable to reset Directory";
             logger.error(message, e);
@@ -199,11 +199,9 @@ public class FileAccountDao implements AccountDao, AutoCloseable {
 
     /**
      * Close the DAO.
-     *
-     * @throws AccountException
      */
     @Override
-    public void close() throws AccountException {
+    public void close() {
         logger.info("Close the file handler");
 
     }
