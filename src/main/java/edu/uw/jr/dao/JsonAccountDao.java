@@ -1,10 +1,15 @@
 package edu.uw.jr.dao;
 
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import edu.uw.ext.framework.account.Account;
 import edu.uw.ext.framework.account.AccountException;
+import edu.uw.ext.framework.account.Address;
+import edu.uw.ext.framework.account.CreditCard;
 import edu.uw.ext.framework.dao.AccountDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.uw.jr.account.SimpleAccount;
+import edu.uw.jr.account.SimpleAddress;
+import edu.uw.jr.account.SimpleCreditCard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +29,19 @@ public class JsonAccountDao implements AccountDao, AutoCloseable {
     private final String DIRECTORY = "target/accounts";
     private final String FILE_NAME = "%s.json";
     private final File accountDirectory = new File(DIRECTORY);
+    private ObjectMapper objectMapper;
 
     /**
      * Creates an instance of this class and loads the account data.
      */
     public JsonAccountDao() {
         logger.info("New JsonAccountDao");
-
+        final SimpleModule simpleModule = new SimpleModule();
+        simpleModule.addAbstractTypeMapping(Account.class, SimpleAccount.class);
+        simpleModule.addAbstractTypeMapping(Address.class, SimpleAddress.class);
+        simpleModule.addAbstractTypeMapping(CreditCard.class, SimpleCreditCard.class);
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(simpleModule);
     }
 
 
@@ -46,10 +57,9 @@ public class JsonAccountDao implements AccountDao, AutoCloseable {
         logger.info("getAccount directory contents {}", contents);
         final String fileName = String.format(FILE_NAME, accountName);
         if (contents.contains(fileName)) {
-            final ObjectMapper mapper = new ObjectMapper();
             logger.info("Json File Exist: {}", accountName);
             try {
-                final SimpleAccount account = mapper.readValue(new File(accountDirectory, fileName), SimpleAccount.class);
+                final SimpleAccount account = objectMapper.readValue(new File(accountDirectory, fileName), SimpleAccount.class);
                 return account;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -67,10 +77,9 @@ public class JsonAccountDao implements AccountDao, AutoCloseable {
     @Override
     public void setAccount(Account account) throws AccountException {
         if (accountDirectory.exists() || accountDirectory.mkdirs()) {
-            final ObjectMapper mapper = new ObjectMapper();
             try {
                 final String fileName = String.format(FILE_NAME, account.getName());
-                mapper.writeValue(new File(accountDirectory, fileName), account);
+                objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(accountDirectory, fileName), account);
             } catch (IOException e) {
                 final String message = "Unable to create account";
                 e.printStackTrace();

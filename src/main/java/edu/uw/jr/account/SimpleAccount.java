@@ -18,12 +18,10 @@ public class SimpleAccount implements Account {
     private String accountName;
     private byte[] passwordHash;
     private int balance;
-    @JsonDeserialize(as=SimpleAddress.class)
     private Address address;
     private String phone;
     private String email;
     private AccountManager accountManager;
-    @JsonDeserialize(as=SimpleCreditCard.class)
     private CreditCard creditCard;
     private String fullName;
     private Boolean accountManagerSet = false;
