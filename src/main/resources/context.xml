@@ -23,4 +23,5 @@
     <!-- Bean providing implementation of edu.uw.ext.framework.account.DaoFactory -->
     <bean id="DaoFactory" class="edu.uw.jr.dao.JsonDaoFactory"/>
 
+    <bean id="BrokerFactory" class="edu.uw.jr.broker.SimpleBrokerFactory"/>
 </beans>

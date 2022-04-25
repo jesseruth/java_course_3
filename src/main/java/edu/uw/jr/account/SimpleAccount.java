@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 public class SimpleAccount implements Account {
     public static final int MIN_ACCT_LEN = 8;
     public static final int MIN_ACCOUNT_BALANCE = 1000 * 100;
-    static Logger logger = LoggerFactory.getLogger(SimpleAccount.class);
+    final static Logger logger = LoggerFactory.getLogger(SimpleAccount.class);
     private String accountName;
     private byte[] passwordHash;
     private int balance;
