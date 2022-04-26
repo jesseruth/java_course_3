@@ -30,8 +30,8 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * The market order queue.
      */
     protected edu.uw.ext.framework.broker.OrderQueue<Boolean, Order> marketOrders;
-    final StockExchange exchg;
-    final AccountManager acctMgr;
+    private final StockExchange exchg;
+    private final AccountManager acctMgr;
 
     /**
      * Constructor for sub classes
@@ -62,7 +62,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
         this.brokerName = brokerName;
         logger.info("SimpleBroker constructor public brokerName :{}", brokerName);
         StopBuyOrderDispatchFilter stopBuyOrderDispatchFilter = new StopBuyOrderDispatchFilter();
-        // marketOrders = new SimpleOrderQueue<Boolean, Order>(10, stopBuyOrderDispatchFilter);
+        marketOrders = new SimpleOrderQueue<Boolean, Order>();
         this.acctMgr = acctMgr;
         this.exchg = exchg;
     }
@@ -104,8 +104,8 @@ public class SimpleBroker implements Broker, ExchangeListener {
      */
     @Override
     public String getName() {
-        logger.info("SimpleBroker getName");
-        return null;
+        logger.info("SimpleBroker getName {}", this.brokerName);
+        return this.brokerName;
     }
 
 
