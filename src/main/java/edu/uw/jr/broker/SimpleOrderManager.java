@@ -1,8 +1,11 @@
 package edu.uw.jr.broker;
 
+import edu.uw.ext.framework.broker.OrderManager;
+import edu.uw.ext.framework.broker.OrderQueue;
 import edu.uw.ext.framework.order.StopBuyOrder;
 import edu.uw.ext.framework.order.StopSellOrder;
 
+import java.util.Comparator;
 import java.util.function.Consumer;
 
 /**
@@ -11,15 +14,21 @@ import java.util.function.Consumer;
  *
  * @author Jesse Ruth
  */
-public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderManager {
+public class SimpleOrderManager implements OrderManager {
+
+    /**
+     * Symbol this manages.
+     */
+    private final String stockSymbol;
+
     /**
      * Queue for stop buy orders
      */
-    protected edu.uw.ext.framework.broker.OrderQueue<Integer, edu.uw.ext.framework.order.StopBuyOrder> stopBuyOrderQueue;
+    protected OrderQueue<Integer, StopBuyOrder> stopBuyOrderQueue;
     /**
      * Queue for stop sell orders
      */
-    protected edu.uw.ext.framework.broker.OrderQueue<Integer, edu.uw.ext.framework.order.StopSellOrder> stopSellOrderQueue;
+    protected  OrderQueue<Integer,  StopSellOrder> stopSellOrderQueue;
 
     /**
      * Constructor. Constructor to be used by sub classes to finish initialization.
@@ -27,7 +36,7 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      * @param stockTickerSymbol the ticker symbol of the stock this instance is manage orders for
      */
     protected SimpleOrderManager(final String stockTickerSymbol) {
-
+        this.stockSymbol = stockTickerSymbol;
     }
 
     /**
@@ -37,7 +46,13 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      * @param price             the current price of stock to be managed
      */
     public SimpleOrderManager(final String stockTickerSymbol, final int price) {
-
+        this(stockTickerSymbol);
+        stopBuyOrderQueue = new SimpleOrderQueue<>(price,
+                (t, o) -> o.getPrice() <= t,
+                Comparator.comparing(StopBuyOrder::getPrice));
+        stopSellOrderQueue = new SimpleOrderQueue<>(price,
+                (t, o) -> o.getPrice() <= t,
+                Comparator.comparing(StopSellOrder::getPrice).reversed());
     }
 
     /**
@@ -47,7 +62,7 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public String getSymbol() {
-        return null;
+        return this.stockSymbol;
     }
 
     /**
@@ -57,7 +72,8 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public void adjustPrice(final int price) {
-
+        stopBuyOrderQueue.setThreshold(price);
+        stopSellOrderQueue.setThreshold(price);
     }
 
     /**
@@ -67,7 +83,7 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public void queueOrder(final StopBuyOrder stopBuyOrder) {
-
+        stopBuyOrderQueue.enqueue(stopBuyOrder);
     }
 
     /**
@@ -77,7 +93,7 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public void queueOrder(final StopSellOrder stopSellOrder) {
-
+        stopSellOrderQueue.enqueue(stopSellOrder);
     }
 
     /**
@@ -88,7 +104,7 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public void setBuyOrderProcessor(final Consumer<StopBuyOrder> processor) {
-
+        stopBuyOrderQueue.setConsumer(processor);
     }
 
     /**
@@ -99,6 +115,6 @@ public class SimpleOrderManager implements edu.uw.ext.framework.broker.OrderMana
      */
     @Override
     public void setSellOrderProcessor(final Consumer<StopSellOrder> processor) {
-
+        stopSellOrderQueue.setConsumer(processor);
     }
 }

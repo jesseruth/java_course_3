@@ -5,6 +5,7 @@ import edu.uw.ext.framework.order.Order;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
@@ -18,6 +19,27 @@ import java.util.function.Consumer;
 public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
 
     /**
+     * the queue data structure.
+     */
+    private final TreeSet<E> queue;
+
+    /**
+     * The current threshold.
+     */
+    private T threshold;
+
+    /**
+     * The BiPredicate used to determine if an order is dispatchable.
+     */
+    private final BiPredicate<T, E> filter;
+
+    /**
+     * Consumer used to process elements.
+     */
+    private Consumer<E> consumer;
+
+
+    /**
      * Constructor
      *
      * @param threshold the initial threshold
@@ -27,7 +49,9 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
     public SimpleOrderQueue(final T threshold,
                             final BiPredicate<T, E> filter,
                             final Comparator<E> cmp) {
-
+            queue = new TreeSet<>(cmp);
+            this.threshold = threshold;
+            this.filter = filter;
     }
 
     /**
@@ -38,7 +62,7 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     public SimpleOrderQueue(final T threshold,
                             final BiPredicate<T, E> filter) {
-
+        this(threshold, filter, Comparator.naturalOrder());
     }
 
     /**
@@ -48,7 +72,21 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public void enqueue(E order) {
+        if(queue.add(order)) {
+            dispatchOrders();
+        }
+    }
 
+    /**
+     * Executes callback for each element
+     */
+    private void dispatchOrders() {
+        Optional<E> opt;
+        while ((opt = dequeue()).isPresent()) {
+            if (consumer != null) {
+                consumer.accept(opt.get());
+            }
+        }
     }
 
     /**
@@ -59,7 +97,17 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public Optional<E> dequeue() {
-        return Optional.empty();
+        E dispatchable = null;
+        if (!queue.isEmpty()) {
+            dispatchable = queue.first();
+            if (filter.test(threshold, dispatchable)) {
+                queue.remove(dispatchable);
+
+            } else {
+                dispatchable = null;
+            }
+        }
+        return Optional.<E>ofNullable(dispatchable);
     }
 
     /**
@@ -69,7 +117,7 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public void setConsumer(Consumer<E> consumer) {
-
+        this.consumer = consumer;
     }
 
     /**
@@ -79,7 +127,7 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public void setThreshold(T threshold) {
-
+        this.threshold = threshold;
     }
 
     /**
@@ -89,6 +137,6 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public T getThreshold() {
-        return null;
+        return threshold;
     }
 }

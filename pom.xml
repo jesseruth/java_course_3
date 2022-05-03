@@ -95,20 +95,20 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId> 
-        <version>3.3.0</version>
-        <configuration>
-          <finalName>${student}-${project.artifactId}</finalName>
-          <formats>
-            <format>tar.gz</format>
-          </formats>
-          <descriptorRefs>
-            <descriptorRef>project</descriptorRef> 
-          </descriptorRefs>
-          <tarLongFileMode>posix</tarLongFileMode>
-        </configuration>
-      </plugin>
+<!--      <plugin>-->
+<!--        <artifactId>maven-assembly-plugin</artifactId> -->
+<!--        <version>3.3.0</version>-->
+<!--        <configuration>-->
+<!--          <finalName>${student}-${project.artifactId}</finalName>-->
+<!--          <formats>-->
+<!--            <format>tar.gz</format>-->
+<!--          </formats>-->
+<!--          <descriptorRefs>-->
+<!--            <descriptorRef>project</descriptorRef> -->
+<!--          </descriptorRefs>-->
+<!--          <tarLongFileMode>posix</tarLongFileMode>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
 
     </plugins>
   </build>
