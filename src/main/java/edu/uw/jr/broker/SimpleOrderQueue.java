@@ -2,6 +2,8 @@ package edu.uw.jr.broker;
 
 import edu.uw.ext.framework.broker.OrderQueue;
 import edu.uw.ext.framework.order.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -17,7 +19,10 @@ import java.util.function.Consumer;
  * @author Jesse Ruth
  */
 public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
-
+    /**
+     * This logger.
+     */
+    final static Logger logger = LoggerFactory.getLogger(SimpleOrderQueue.class);
     /**
      * the queue data structure.
      */
@@ -49,9 +54,11 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
     public SimpleOrderQueue(final T threshold,
                             final BiPredicate<T, E> filter,
                             final Comparator<E> cmp) {
-            queue = new TreeSet<>(cmp);
-            this.threshold = threshold;
-            this.filter = filter;
+        logger.info("SimpleOrderQueue constructor Threshold: {}", threshold);
+
+        queue = new TreeSet<>(cmp);
+        this.threshold = threshold;
+        this.filter = filter;
     }
 
     /**
@@ -63,6 +70,8 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
     public SimpleOrderQueue(final T threshold,
                             final BiPredicate<T, E> filter) {
         this(threshold, filter, Comparator.naturalOrder());
+        logger.info("naturalOrder: SimpleOrderQueue constructor Threshold: {}", threshold);
+
     }
 
     /**
@@ -71,8 +80,9 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      * @param order the order to be added to the queue
      */
     @Override
-    public void enqueue(E order) {
-        if(queue.add(order)) {
+    public void enqueue(final E order) {
+        logger.info("SimpleOrderQueue enqueue order: {}, Ticker: {}", threshold, order.getStockTicker());
+        if (queue.add(order)) {
             dispatchOrders();
         }
     }
@@ -81,29 +91,37 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      * Executes callback for each element
      */
     private void dispatchOrders() {
+        logger.info("SimpleOrderQueue dispatchOrders");
         Optional<E> opt;
+        int counter = 1;
         while ((opt = dequeue()).isPresent()) {
+            logger.info("*** SimpleOrderQueue dispatchOrders");
             if (consumer != null) {
                 consumer.accept(opt.get());
+                logger.info("SimpleOrderQueue dispatchOrder: {}", counter);
+                counter++;
             }
         }
     }
 
     /**
-     * Removes the highest dispatchable order in the queue. If there are orders in the queue but they do not meet the
+     * Removes the highest dispatchable order in the queue. If there are orders in the queue, but they do not meet the
      * dispatch threshold order will not be removed and null will be returned.
      *
      * @return the first dispatchable order in the queue, or null if there are no dispatchable orders in the queue
      */
     @Override
     public Optional<E> dequeue() {
+        logger.info("SimpleOrderQueue dequeue");
+
         E dispatchable = null;
         if (!queue.isEmpty()) {
             dispatchable = queue.first();
             if (filter.test(threshold, dispatchable)) {
+                logger.info("Order is Dispatchable");
                 queue.remove(dispatchable);
-
             } else {
+                logger.info("Order is NOT Dispatchable");
                 dispatchable = null;
             }
         }
@@ -117,6 +135,8 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public void setConsumer(Consumer<E> consumer) {
+        logger.info("Register a new consumer to be used during order processing.");
+
         this.consumer = consumer;
     }
 
@@ -127,7 +147,9 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public void setThreshold(T threshold) {
+        logger.info("Adjusts the threshold to {} and dispatched orders", threshold);
         this.threshold = threshold;
+        dispatchOrders();
     }
 
     /**
@@ -137,6 +159,8 @@ public class SimpleOrderQueue<T, E extends Order> implements OrderQueue<T, E> {
      */
     @Override
     public T getThreshold() {
+        logger.info("Obtains the current threshold value of {}", threshold);
+
         return threshold;
     }
 }

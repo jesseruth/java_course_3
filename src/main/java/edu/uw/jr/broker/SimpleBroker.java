@@ -61,8 +61,8 @@ public class SimpleBroker implements Broker, ExchangeListener {
     protected SimpleBroker(final String brokerName,
                            final StockExchange stockExchange,
                            final AccountManager accountManager) {
-        this.brokerName = brokerName;
         logger.info("SimpleBroker constructor protected brokerName :{}", brokerName);
+        this.brokerName = brokerName;
         this.accountManager = accountManager;
         this.stockExchange = stockExchange;
     }
@@ -78,11 +78,16 @@ public class SimpleBroker implements Broker, ExchangeListener {
                         final AccountManager accountManager,
                         final StockExchange stockExchange) {
         this(brokerName, stockExchange, accountManager);
-
         logger.info("SimpleBroker constructor public brokerName :{}", brokerName);
-        // StopBuyOrderDispatchFilter stopBuyOrderDispatchFilter = new StopBuyOrderDispatchFilter();
-        marketOrders = new SimpleOrderQueue<>(stockExchange.isOpen(), (t, o) -> t);
+        logger.info("** MARKET is open: {}", stockExchange.isOpen());
+
+        marketOrders = new SimpleOrderQueue<>(stockExchange.isOpen(), (t, o) -> {
+            logger.info("** SimpleOrderQueue lambda is open: {}", t);
+            return t;
+        });
+
         marketOrders.setConsumer(this::executeOrder);
+
         initializeOrderManagers();
         stockExchange.addExchangeListener(this);
     }
@@ -93,10 +98,11 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param order the order to execute
      */
     protected void executeOrder(final Order order) {
-        logger.info("SimpleBroker executeOrder");
         final int sharePrice = stockExchange.executeTrade(order);
+
         try {
             final Account account = accountManager.getAccount(order.getAccountId());
+            logger.info("SimpleBroker executeOrder for {} {} at {}", account.getName(), order.getStockTicker(), sharePrice);
             account.reflectOrder(order, sharePrice);
         } catch (final AccountException error) {
             logger.error("Unable to update account {}", order.getAccountId());
@@ -113,9 +119,9 @@ public class SimpleBroker implements Broker, ExchangeListener {
         final Consumer<StopSellOrder> moveSell2MarketProc = order -> marketOrders.enqueue(order);
         logger.info("SimpleBroker initializeOrderManagers");
 
-        Consumer<? super StockQuote> addStockAction = (q) -> {
-            final int currentPrice = q.getPrice();
-            final String stockTicker = q.getTicker();
+        Consumer<? super StockQuote> addStockAction = (quote) -> {
+            final int currentPrice = quote.getPrice();
+            final String stockTicker = quote.getTicker();
             final OrderManager orderManager = createOrderManager(stockTicker, currentPrice);
             orderManager.setBuyOrderProcessor(moveBuy2MarketProc);
             orderManager.setSellOrderProcessor(moveSell2MarketProc);
@@ -169,8 +175,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
         checkInvariants();
         logger.info("SimpleBroker createAccount {} with balance {}", username, balance);
         try {
-            Account account = accountManager.createAccount(username, password, balance);
-            return account;
+            return accountManager.createAccount(username, password, balance);
         } catch (AccountException e) {
             e.printStackTrace();
             throw new BrokerException("Unable to create account :(");

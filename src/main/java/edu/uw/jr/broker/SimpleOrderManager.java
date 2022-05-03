@@ -4,6 +4,8 @@ import edu.uw.ext.framework.broker.OrderManager;
 import edu.uw.ext.framework.broker.OrderQueue;
 import edu.uw.ext.framework.order.StopBuyOrder;
 import edu.uw.ext.framework.order.StopSellOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 import java.util.function.Consumer;
@@ -15,6 +17,10 @@ import java.util.function.Consumer;
  * @author Jesse Ruth
  */
 public class SimpleOrderManager implements OrderManager {
+    /**
+     * This logger.
+     */
+    final static Logger logger = LoggerFactory.getLogger(SimpleOrderManager.class);
 
     /**
      * Symbol this manages.
@@ -28,7 +34,7 @@ public class SimpleOrderManager implements OrderManager {
     /**
      * Queue for stop sell orders
      */
-    protected  OrderQueue<Integer,  StopSellOrder> stopSellOrderQueue;
+    protected OrderQueue<Integer, StopSellOrder> stopSellOrderQueue;
 
     /**
      * Constructor. Constructor to be used by sub classes to finish initialization.
@@ -37,6 +43,7 @@ public class SimpleOrderManager implements OrderManager {
      */
     protected SimpleOrderManager(final String stockTickerSymbol) {
         this.stockSymbol = stockTickerSymbol;
+        logger.info("Construct Protected SimpleOrderManager with {}", stockTickerSymbol);
     }
 
     /**
@@ -47,11 +54,19 @@ public class SimpleOrderManager implements OrderManager {
      */
     public SimpleOrderManager(final String stockTickerSymbol, final int price) {
         this(stockTickerSymbol);
+        logger.info("Create stopBuyOrderQueue & stopSellOrderQueue");
+
         stopBuyOrderQueue = new SimpleOrderQueue<>(price,
-                (t, o) -> o.getPrice() <= t,
+                (t, o) -> {
+                    logger.info("Create stopBuyOrderQueue lambda {} <= {}", o.getPrice(), t);
+                    return o.getPrice() <= t;
+                },
                 Comparator.comparing(StopBuyOrder::getPrice));
         stopSellOrderQueue = new SimpleOrderQueue<>(price,
-                (t, o) -> o.getPrice() <= t,
+                (t, o) -> {
+                    logger.info("Create stopSellOrderQueue lambda {} <= {}", o.getPrice(), t);
+                    return o.getPrice() >= t;
+                },
                 Comparator.comparing(StopSellOrder::getPrice).reversed());
     }
 
@@ -62,6 +77,8 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public String getSymbol() {
+        logger.info("Get symbol {}", this.stockSymbol);
+
         return this.stockSymbol;
     }
 
@@ -72,6 +89,7 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public void adjustPrice(final int price) {
+        logger.info("Adjust Threshold price {}", price);
         stopBuyOrderQueue.setThreshold(price);
         stopSellOrderQueue.setThreshold(price);
     }
@@ -83,6 +101,8 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public void queueOrder(final StopBuyOrder stopBuyOrder) {
+        logger.info("Queue a stop buy order.");
+
         stopBuyOrderQueue.enqueue(stopBuyOrder);
     }
 
@@ -93,6 +113,7 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public void queueOrder(final StopSellOrder stopSellOrder) {
+        logger.info("Queue a stop sell order.");
         stopSellOrderQueue.enqueue(stopSellOrder);
     }
 
@@ -104,6 +125,7 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public void setBuyOrderProcessor(final Consumer<StopBuyOrder> processor) {
+        logger.info("setBuyOrderProcessor");
         stopBuyOrderQueue.setConsumer(processor);
     }
 
@@ -115,6 +137,7 @@ public class SimpleOrderManager implements OrderManager {
      */
     @Override
     public void setSellOrderProcessor(final Consumer<StopSellOrder> processor) {
+        logger.info("setSellOrderProcessor");
         stopSellOrderQueue.setConsumer(processor);
     }
 }
