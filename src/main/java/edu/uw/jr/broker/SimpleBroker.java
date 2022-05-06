@@ -113,7 +113,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * Fetch the stock list from the exchange and initialize an order manager for each stock.
      * Only to be used during construction.
      */
-    protected final void initializeOrderManagers() {
+    protected final synchronized void initializeOrderManagers() {
         orderManagerMap = new HashMap<>();
         final Consumer<StopBuyOrder> moveBuy2MarketProc = order -> marketOrders.enqueue(order);
         final Consumer<StopSellOrder> moveSell2MarketProc = order -> marketOrders.enqueue(order);
@@ -154,7 +154,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @return the name of the broker
      */
     @Override
-    public String getName() {
+    public final synchronized String getName() {
         checkInvariants();
         logger.info("SimpleBroker getName {}", this.brokerName);
         return this.brokerName;
@@ -171,7 +171,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @throws BrokerException if unable to create account
      */
     @Override
-    public Account createAccount(final String username, final String password, final int balance) throws BrokerException {
+    public final synchronized Account createAccount(final String username, final String password, final int balance) throws BrokerException {
         checkInvariants();
         logger.info("SimpleBroker createAccount {} with balance {}", username, balance);
         try {
@@ -189,7 +189,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @throws BrokerException if unable to delete account
      */
     @Override
-    public void deleteAccount(final String username) throws BrokerException {
+    public final synchronized void deleteAccount(final String username) throws BrokerException {
         logger.info("SimpleBroker deleteAccount {}", username);
         try {
             accountManager.deleteAccount(username);
@@ -208,7 +208,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @throws BrokerException username and password are invalid
      */
     @Override
-    public Account getAccount(final String username, final String password) throws BrokerException {
+    public final synchronized Account getAccount(final String username, final String password) throws BrokerException {
         logger.info("SimpleBroker getAccount {}", username);
         try {
             if (accountManager.validateLogin(username, password)) {
@@ -231,7 +231,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @return optional containing quote, or empty if unable to obtain quote
      */
     @Override
-    public Optional<StockQuote> requestQuote(final String symbol) {
+    public final synchronized Optional<StockQuote> requestQuote(final String symbol) {
         logger.info("SimpleBroker requestQuote {}", symbol);
         Optional<StockQuote> stockQuote = this.stockExchange.getQuote(symbol);
         if (stockQuote.isPresent()) {
@@ -250,7 +250,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param order the order being placed with the broker
      */
     @Override
-    public void placeOrder(final MarketBuyOrder order) {
+    public final synchronized void placeOrder(final MarketBuyOrder order) {
         checkInvariants();
         logger.info("SimpleBroker placeOrder MarketBuyOrder");
         marketOrders.enqueue(order);
@@ -262,13 +262,13 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param order the order being placed with the broker
      */
     @Override
-    public void placeOrder(final MarketSellOrder order) {
+    public final synchronized void placeOrder(final MarketSellOrder order) {
         logger.info("SimpleBroker placeOrder MarketSellOrder");
         checkInvariants();
         marketOrders.enqueue(order);
     }
 
-    private OrderManager orderManagerLookup(final String ticker) throws BrokerException {
+    private synchronized OrderManager orderManagerLookup(final String ticker) throws BrokerException {
         final OrderManager orderManager = orderManagerMap.get(ticker);
         if (orderManager == null) {
             throw new BrokerException(String.format("Stock %s does not exist", ticker));
@@ -281,7 +281,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @throws BrokerException
      */
     @Override
-    public void placeOrder(final StopBuyOrder order) throws BrokerException {
+    public final synchronized void placeOrder(final StopBuyOrder order) throws BrokerException {
         logger.info("SimpleBroker placeOrder StopBuyOrder");
         checkInvariants();
         orderManagerLookup(order.getStockTicker()).queueOrder(order);
@@ -292,14 +292,14 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @throws BrokerException
      */
     @Override
-    public void placeOrder(final StopSellOrder order) throws BrokerException {
+    public final synchronized void placeOrder(final StopSellOrder order) throws BrokerException {
         logger.info("SimpleBroker placeOrder StopSellOrder");
         checkInvariants();
         orderManagerLookup(order.getStockTicker()).queueOrder(order);
     }
 
     @Override
-    public void close() throws BrokerException {
+    public synchronized void close() throws BrokerException {
         logger.info("SimpleBroker close close close close");
         try {
             stockExchange.removeExchangeListener(this);
@@ -316,7 +316,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param exchangeEvent the exchange (open) event
      */
     @Override
-    public void exchangeOpened(final ExchangeEvent exchangeEvent) {
+    public final synchronized void exchangeOpened(final ExchangeEvent exchangeEvent) {
         logger.info("SimpleBroker exchangeOpened");
         checkInvariants();
         marketOrders.setThreshold(Boolean.TRUE);
@@ -328,7 +328,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param exchangeEvent the exchange (closed) event
      */
     @Override
-    public void exchangeClosed(final ExchangeEvent exchangeEvent) {
+    public final synchronized void exchangeClosed(final ExchangeEvent exchangeEvent) {
         logger.info("SimpleBroker exchangeClosed");
         checkInvariants();
         marketOrders.setThreshold(Boolean.FALSE);
@@ -340,7 +340,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
      * @param exchangeEvent the price change event
      */
     @Override
-    public void priceChanged(final ExchangeEvent exchangeEvent) {
+    public final synchronized void priceChanged(final ExchangeEvent exchangeEvent) {
         logger.info("SimpleBroker priceChanged");
         checkInvariants();
         OrderManager orderManager;
@@ -350,7 +350,7 @@ public class SimpleBroker implements Broker, ExchangeListener {
         }
     }
 
-    private void checkInvariants() {
+    private synchronized void checkInvariants() {
         if (brokerName == null ||
                 accountManager == null ||
                 stockExchange == null ||

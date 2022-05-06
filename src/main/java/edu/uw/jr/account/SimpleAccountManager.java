@@ -38,7 +38,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if operation fails
      */
     @Override
-    public void persist(final Account account) throws AccountException {
+    public synchronized void persist(final Account account) throws AccountException {
         dao.setAccount(account);
     }
 
@@ -50,7 +50,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if operation fails
      */
     @Override
-    public Account getAccount(final String accountName) throws AccountException {
+    public synchronized Account getAccount(final String accountName) throws AccountException {
         try {
             Account account;
             account = dao.getAccount(accountName);
@@ -70,7 +70,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if operation fails
      */
     @Override
-    public void deleteAccount(final String accountName) throws AccountException {
+    public synchronized void deleteAccount(final String accountName) throws AccountException {
         dao.deleteAccount(accountName);
     }
 
@@ -84,7 +84,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if the account already exists, or account creation fails for any reason
      */
     @Override
-    public Account createAccount(final String accountName, final String password, final int balance) throws AccountException {
+    public synchronized Account createAccount(final String accountName, final String password, final int balance) throws AccountException {
         Account account = dao.getAccount(accountName);
         if (account != null) {
             throw new AccountException("account already exists");
@@ -110,7 +110,7 @@ public class SimpleAccountManager implements AccountManager {
      * @throws AccountException if error occurs accessing accounts
      */
     @Override
-    public boolean validateLogin(final String accountName, final String password) throws AccountException {
+    public synchronized boolean validateLogin(final String accountName, final String password) throws AccountException {
         final Account account = dao.getAccount(accountName);
         if (account == null) return false;
         try {

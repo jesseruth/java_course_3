@@ -5,9 +5,7 @@ import edu.uw.ext.framework.order.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -28,7 +26,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     /**
      * the queue data structure.
      */
-    private final TreeSet<E> queue;
+    private final SortedSet<E> queue;
 
     /**
      * The current threshold.
@@ -65,7 +63,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
         this.filter = filter;
         this.executor = executor;
 
-        queue = new TreeSet<>(cmp);
+        queue = Collections.synchronizedSortedSet(new TreeSet<>(cmp));
     }
 
     /**
@@ -88,7 +86,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     @Override
     public void run() {
         logger.info("Run ExecutorOrderQueue");
-
+        dispatchOrders();
     }
 
     /**
@@ -100,8 +98,8 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     public void enqueue(final E order) {
         logger.info("SimpleOrderQueue enqueue order: {}, Ticker: {}", threshold, order.getStockTicker());
         if (queue.add(order)) {
-            dispatchOrders();
-        }
+            executor.execute(this);
+            }
     }
 
     /**
@@ -168,7 +166,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
         logger.info("setThreshold");
 
         this.threshold = threshold;
-        dispatchOrders();
+        executor.execute(this);
     }
 
     /**

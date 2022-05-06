@@ -5,6 +5,7 @@ import edu.uw.ext.framework.broker.BrokerException;
 import edu.uw.ext.framework.broker.OrderManager;
 import edu.uw.ext.framework.exchange.StockExchange;
 import edu.uw.jr.broker.SimpleBroker;
+import edu.uw.jr.broker.SimpleOrderQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,14 +33,25 @@ public class ExecutorBroker extends SimpleBroker {
      * @param stockExchange  the stock exchange to be used by the broker
      */
     public ExecutorBroker(final String brokerName, final AccountManager accountManager, final StockExchange stockExchange) {
-        super(brokerName, accountManager, stockExchange);
+        super(brokerName, stockExchange, accountManager);
         logger.info("XXX - Construct ExecutorBroker for {}", brokerName);
         executor = Executors.newSingleThreadExecutor();
+
+        marketOrders = new ExecutorOrderQueue<>(stockExchange.isOpen(), (t, o) -> {
+            logger.info("** SimpleOrderQueue lambda is open: {}", t);
+            return t;
+        }, executor);
+
+        marketOrders.setConsumer(this::executeOrder);
+
+        initializeOrderManagers();
+        stockExchange.addExchangeListener(this);
     }
 
     @Override
-    public void close() throws BrokerException {
+    public synchronized void close() throws BrokerException {
         logger.info("XXX - ExecutorBroker close close close close");
+
         super.close();
     }
 
@@ -51,8 +63,8 @@ public class ExecutorBroker extends SimpleBroker {
      * @return a new OrderManager for the specified stock
      */
     @Override
-    protected OrderManager createOrderManager(final String ticker,
-                                              final int initialPrice) {
+    protected final synchronized OrderManager createOrderManager(final String ticker,
+                                                                 final int initialPrice) {
         logger.info("XXX - ExecutorBroker createOrderManager for {} @ {}", ticker, initialPrice);
         return new ExecutorOrderManager(ticker, initialPrice, executor);
     }
