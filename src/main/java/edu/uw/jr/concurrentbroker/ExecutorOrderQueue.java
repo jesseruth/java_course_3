@@ -2,9 +2,12 @@ package edu.uw.jr.concurrentbroker;
 
 import edu.uw.ext.framework.broker.OrderQueue;
 import edu.uw.ext.framework.order.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.concurrent.Executor;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -17,6 +20,32 @@ import java.util.function.Consumer;
  * @author Jesse Ruth
  */
 public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>, Runnable {
+    /**
+     * This logger.
+     */
+    final static Logger logger = LoggerFactory.getLogger(ExecutorOrderQueue.class);
+
+    /**
+     * the queue data structure.
+     */
+    private final TreeSet<E> queue;
+
+    /**
+     * The current threshold.
+     */
+    private T threshold;
+
+    /**
+     * The BiPredicate used to determine if an order is dispatchable.
+     */
+    private final BiPredicate<T, E> filter;
+
+    /**
+     * Consumer used to process elements.
+     */
+    private Consumer<E> consumer;
+
+    final Executor executor;
 
     /**
      * Constructor
@@ -30,7 +59,13 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
                               final BiPredicate<T, E> filter,
                               final Comparator<E> cmp,
                               final Executor executor) {
+        logger.info("New ExecutorOrderQueue");
 
+        this.threshold = threshold;
+        this.filter = filter;
+        this.executor = executor;
+
+        queue = new TreeSet<>(cmp);
     }
 
     /**
@@ -41,9 +76,10 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      * @param executor  the executor to be used to process this queues orders
      */
     public ExecutorOrderQueue(final T threshold,
-                              final java.util.function.BiPredicate<T, E> filter,
+                              final BiPredicate<T, E> filter,
                               final Executor executor) {
-
+        this(threshold, filter, Comparator.naturalOrder(), executor);
+        logger.info("New ExecutorOrderQueue");
     }
 
     /**
@@ -51,6 +87,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public void run() {
+        logger.info("Run ExecutorOrderQueue");
 
     }
 
@@ -61,8 +98,29 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public void enqueue(final E order) {
-
+        logger.info("SimpleOrderQueue enqueue order: {}, Ticker: {}", threshold, order.getStockTicker());
+        if (queue.add(order)) {
+            dispatchOrders();
+        }
     }
+
+    /**
+     * Executes callback for each element
+     */
+    private void dispatchOrders() {
+        logger.info("SimpleOrderQueue dispatchOrders");
+        Optional<E> opt;
+        int counter = 1;
+        while ((opt = dequeue()).isPresent()) {
+            logger.info("*** SimpleOrderQueue dispatchOrders");
+            if (consumer != null) {
+                consumer.accept(opt.get());
+                logger.info("SimpleOrderQueue dispatchOrder: {}", counter);
+                counter++;
+            }
+        }
+    }
+
 
     /**
      * Removes the highest dispatchable order in the queue. If there are orders in the queue but they do not meet
@@ -72,8 +130,20 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public Optional<E> dequeue() {
-        E returnValue = null;
-        return Optional.ofNullable(returnValue);
+        logger.info("dequeue");
+
+        E dispatchable = null;
+        if (!queue.isEmpty()) {
+            dispatchable = queue.first();
+            if (filter.test(threshold, dispatchable)) {
+                logger.info("Order is Dispatchable");
+                queue.remove(dispatchable);
+            } else {
+                logger.info("Order is NOT Dispatchable");
+                dispatchable = null;
+            }
+        }
+        return Optional.<E>ofNullable(dispatchable);
     }
 
     /**
@@ -83,7 +153,8 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public void setConsumer(final Consumer<E> consumer) {
-
+        logger.info("setConsumer");
+        this.consumer = consumer;
     }
 
 
@@ -94,7 +165,10 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public void setThreshold(final T threshold) {
+        logger.info("setThreshold");
 
+        this.threshold = threshold;
+        dispatchOrders();
     }
 
     /**
@@ -104,6 +178,8 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      */
     @Override
     public T getThreshold() {
-        return null;
+        logger.info("Run ExecutorOrderQueue");
+
+        return this.threshold;
     }
 }

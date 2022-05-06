@@ -8,6 +8,9 @@ import edu.uw.jr.broker.SimpleBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 /**
  * An extension of AbstractBroker that uses a ExecutorOrderManager and ExecutorOrderQueue for the market order queue.
  *
@@ -19,6 +22,8 @@ public class ExecutorBroker extends SimpleBroker {
      */
     final static Logger logger = LoggerFactory.getLogger(ExecutorBroker.class);
 
+    private final Executor executor;
+
     /**
      * Constructor
      *
@@ -28,11 +33,13 @@ public class ExecutorBroker extends SimpleBroker {
      */
     public ExecutorBroker(final String brokerName, final AccountManager accountManager, final StockExchange stockExchange) {
         super(brokerName, accountManager, stockExchange);
+        logger.info("XXX - Construct ExecutorBroker for {}", brokerName);
+        executor = Executors.newSingleThreadExecutor();
     }
 
     @Override
     public void close() throws BrokerException {
-        logger.info("SimpleBroker close close close close");
+        logger.info("XXX - ExecutorBroker close close close close");
         super.close();
     }
 
@@ -46,7 +53,7 @@ public class ExecutorBroker extends SimpleBroker {
     @Override
     protected OrderManager createOrderManager(final String ticker,
                                               final int initialPrice) {
-        return super.createOrderManager(ticker, initialPrice);
-
+        logger.info("XXX - ExecutorBroker createOrderManager for {} @ {}", ticker, initialPrice);
+        return new ExecutorOrderManager(ticker, initialPrice, executor);
     }
 }

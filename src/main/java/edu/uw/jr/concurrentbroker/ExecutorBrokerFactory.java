@@ -4,6 +4,8 @@ import edu.uw.ext.framework.account.AccountManager;
 import edu.uw.ext.framework.broker.Broker;
 import edu.uw.ext.framework.broker.BrokerFactory;
 import edu.uw.ext.framework.exchange.StockExchange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BrokerFactory implementation which creates a ExecutorBroker.
@@ -11,6 +13,11 @@ import edu.uw.ext.framework.exchange.StockExchange;
  * @author Jesse Ruth
  */
 public class ExecutorBrokerFactory implements BrokerFactory {
+    /**
+     * This logger.
+     */
+    final static Logger logger = LoggerFactory.getLogger(ExecutorBrokerFactory.class);
+
     /**
      * Instantiates a new ExecutorBroker.
      *
@@ -21,6 +28,7 @@ public class ExecutorBrokerFactory implements BrokerFactory {
      */
     @Override
     public Broker newBroker(final String name, final AccountManager accountManager, final StockExchange stockExchange) {
+        logger.info("XXX-XXX ExecutorBrokerFactory XXXXXX");
         return new ExecutorBroker(name, accountManager, stockExchange);
     }
 }
