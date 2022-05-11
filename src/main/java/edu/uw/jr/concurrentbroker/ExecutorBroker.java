@@ -35,8 +35,8 @@ public class ExecutorBroker extends SimpleBroker {
     public ExecutorBroker(final String brokerName, final AccountManager accountManager, final StockExchange stockExchange) {
         super(brokerName, stockExchange, accountManager);
         logger.info("XXX - Construct ExecutorBroker for {}", brokerName);
-        executor = Executors.newSingleThreadExecutor();
-
+//        executor = Executors.newCachedThreadPool();
+        executor = Executors.newFixedThreadPool(10);
         marketOrders = new ExecutorOrderQueue<>(stockExchange.isOpen(), (t, o) -> {
             logger.info("** SimpleOrderQueue lambda is open: {}", t);
             return t;
