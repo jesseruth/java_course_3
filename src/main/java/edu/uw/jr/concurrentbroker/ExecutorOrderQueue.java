@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
@@ -37,6 +38,8 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
      * The BiPredicate used to determine if an order is dispatchable.
      */
     private final BiPredicate<T, E> filter;
+
+    private ReentrantLock reentrantLock = new ReentrantLock();
 
     /**
      * Consumer used to process elements.
@@ -86,7 +89,29 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     @Override
     public void run() {
         logger.info("Run ExecutorOrderQueue");
-        dispatchOrders();
+        reentrantLock.lock();
+        try {
+            Optional<E> opt;
+            int counter = 1;
+            while ((opt = dequeue()).isPresent()) {
+                logger.info("*** SimpleOrderQueue dispatchOrders");
+                if (consumer != null) {
+                    consumer.accept(opt.get());
+                    logger.info("SimpleOrderQueue dispatchOrder: {}", counter);
+                    counter++;
+                }
+            }
+        } finally {
+            reentrantLock.unlock();
+        }
+    }
+
+    /**
+     * Executes callback for each element
+     */
+    private void dispatchOrders() {
+        logger.info("SimpleOrderQueue dispatchOrders");
+        executor.execute(this);
     }
 
     /**
@@ -97,25 +122,13 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     @Override
     public void enqueue(final E order) {
         logger.info("SimpleOrderQueue enqueue order: {}, Ticker: {}", threshold, order.getStockTicker());
-        if (queue.add(order)) {
-            executor.execute(this);
+        reentrantLock.lock();
+        try {
+            if (queue.add(order)) {
+                executor.execute(this);
             }
-    }
-
-    /**
-     * Executes callback for each element
-     */
-    private void dispatchOrders() {
-        logger.info("SimpleOrderQueue dispatchOrders");
-        Optional<E> opt;
-        int counter = 1;
-        while ((opt = dequeue()).isPresent()) {
-            logger.info("*** SimpleOrderQueue dispatchOrders");
-            if (consumer != null) {
-                consumer.accept(opt.get());
-                logger.info("SimpleOrderQueue dispatchOrder: {}", counter);
-                counter++;
-            }
+        } finally {
+            reentrantLock.unlock();
         }
     }
 
@@ -131,15 +144,21 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
         logger.info("dequeue");
 
         E dispatchable = null;
-        if (!queue.isEmpty()) {
-            dispatchable = queue.first();
-            if (filter.test(threshold, dispatchable)) {
-                logger.info("Order is Dispatchable");
-                queue.remove(dispatchable);
-            } else {
-                logger.info("Order is NOT Dispatchable");
-                dispatchable = null;
+        reentrantLock.lock();
+        try {
+            if (!queue.isEmpty()) {
+                dispatchable = queue.first();
+                if (filter.test(threshold, dispatchable)) {
+                    logger.info("Order is Dispatchable");
+                    queue.remove(dispatchable);
+                } else {
+                    logger.info("Order is NOT Dispatchable");
+                    dispatchable = null;
+                }
             }
+        } finally {
+            reentrantLock.unlock();
+
         }
         return Optional.<E>ofNullable(dispatchable);
     }
@@ -152,7 +171,12 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
     @Override
     public void setConsumer(final Consumer<E> consumer) {
         logger.info("setConsumer");
-        this.consumer = consumer;
+        reentrantLock.lock();
+        try {
+            this.consumer = consumer;
+        } finally {
+            reentrantLock.unlock();
+        }
     }
 
 
@@ -166,7 +190,7 @@ public class ExecutorOrderQueue<T, E extends Order> implements OrderQueue<T, E>,
         logger.info("setThreshold");
 
         this.threshold = threshold;
-        executor.execute(this);
+        dispatchOrders();
     }
 
     /**
