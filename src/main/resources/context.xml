@@ -24,4 +24,10 @@
     <bean id="DaoFactory" class="edu.uw.jr.dao.JsonDaoFactory"/>
 
     <bean id="BrokerFactory" class="edu.uw.jr.concurrentbroker.ExecutorBrokerFactory"/>
+
+    <!-- Bean implementing ...framework.exchange.NetworkExchangeAdapterFactory -->
+    <bean id="NetworkExchangeAdapterFactory" class="edu.uw.jr.exchange.ExchangeNetworkAdapterFactory"/>
+
+    <!-- Bean implementing ...framework.exchange.NetworkExchangeProxyFactory -->
+    <bean id="NetworkExchangeProxyFactory" class="edu.uw.jr.exchange.ExchangeNetworkProxyFactory"/>
 </beans>
