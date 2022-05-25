@@ -48,6 +48,7 @@ public class NetEventProcessor implements Runnable {
      * @param eventPort      the multicast port to connect to
      */
     public NetEventProcessor(final String eventIpAddress, final int eventPort) {
+        logger.info("New NetEventProcessor");
         this.eventIpAddress = eventIpAddress;
         this.eventPort = eventPort;
     }
@@ -57,7 +58,7 @@ public class NetEventProcessor implements Runnable {
      */
     @Override
     public void run() {
-
+        logger.info("NetEventProcessor RUN!!!!!");
         try (MulticastSocket eventSocket = new MulticastSocket(eventPort)) {
             final InetAddress eventGroup = InetAddress.getByName(eventIpAddress);
             eventSocket.joinGroup(eventGroup);
@@ -145,6 +146,5 @@ public class NetEventProcessor implements Runnable {
      */
     public void removeExchangeListener(final ExchangeListener exchangeListener) {
         eventListenerList.remove(ExchangeListener.class, exchangeListener);
-
     }
 }

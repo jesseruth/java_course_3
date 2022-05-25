@@ -1,5 +1,10 @@
 package edu.uw.jr.exchange;
 
+/**
+ * Class to hold constants
+ *
+ * @author Jesse Ruth
+ */
 public final class ExchangeConstants {
     public static final String ENCODING = "ISO-8859-1";
     public static final String ELEMENT_DELIMITER = ":";

@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
  * Accepts connections and passes them to a CommandHandler, for the reading and processing of commands.
  *
  * @author Jesse Ruth
- *
  */
 public class CommandListener implements Runnable {
     final static Logger logger = LoggerFactory.getLogger(CommandListener.class);
@@ -68,11 +67,12 @@ public class CommandListener implements Runnable {
 
     /**
      * Constructor
-     * @param commandPort the listening port
+     *
+     * @param commandPort  the listening port
      * @param realExchange the "real" exchange
      */
     public CommandListener(final int commandPort,
-                            final StockExchange realExchange) {
+                           final StockExchange realExchange) {
         this.commandPort = commandPort;
         this.realExchange = realExchange;
 
@@ -87,7 +87,7 @@ public class CommandListener implements Runnable {
                 logger.info("closing server socket");
                 serverSocket.close();
             }
-            if(!requestExecutor.isShutdown()) {
+            if (!requestExecutor.isShutdown()) {
                 requestExecutor.shutdown();
                 requestExecutor.awaitTermination(1L, TimeUnit.SECONDS);
             }

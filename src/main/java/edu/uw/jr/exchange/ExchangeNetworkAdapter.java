@@ -27,11 +27,11 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
     /**
      * Time to live
      */
-    private static int TTL =2;
+    private static final int TTL = 2;
     /**
      * The exchange this adapter delegates to
      */
-    private StockExchange realExchange;
+    private final StockExchange realExchange;
     /**
      * Event Socket
      */
@@ -40,22 +40,23 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
     /**
      * Datagram packet used by this class
      */
-    private DatagramPacket datagramPacket;
+    private final DatagramPacket datagramPacket;
     /**
      * Listener for inbound command connections
      */
-    private CommandListener commandListener;
+    private final CommandListener commandListener;
     /**
      * Executor for commands
      */
-    private ExecutorService commandExecutorService;
+    private final ExecutorService commandExecutorService;
 
     /**
      * Constructor
-     * @param realExchange The actual exchange
-     * @param multicastIP Multicast address
+     *
+     * @param realExchange  The actual exchange
+     * @param multicastIP   Multicast address
      * @param multicastPort IP port used to propagate prices changes
-     * @param commandPort Port to listen for command
+     * @param commandPort   Port to listen for command
      * @throws UnknownHostException if unable to resolve IP
      */
     public ExchangeNetworkAdapter(final StockExchange realExchange, final String multicastIP, final int multicastPort, final int commandPort) throws UnknownHostException {
@@ -79,6 +80,7 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
 
     /**
      * Convenience method to send multicast events
+     *
      * @param msg the string message to write
      * @throws IOException for a network failure
      */
@@ -92,6 +94,7 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
 
     /**
      * Exchange opened and prices are adjusting.
+     *
      * @param exchangeEvent the event
      */
     @Override
@@ -106,6 +109,7 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
 
     /**
      * The exchange has closed
+     *
      * @param exchangeEvent the event
      */
     @Override
@@ -121,6 +125,7 @@ public final class ExchangeNetworkAdapter implements ExchangeAdapter {
 
     /**
      * Process price changes
+     *
      * @param exchangeEvent the event
      */
     @Override

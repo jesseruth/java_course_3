@@ -25,15 +25,15 @@ public class ExchangeNetworkProxy implements StockExchange {
     /**
      * Command IP address - the network adapter host
      */
-    private String commandIpAddress;
+    private final String commandIpAddress;
     /**
      * The command port
      */
-    private int commandPort;
+    private final int commandPort;
     /**
      * The event processor, it propagates events to the registered listeners.
      */
-    private NetEventProcessor eventProcessor;
+    private final NetEventProcessor eventProcessor;
 
     /**
      * Constructor
@@ -67,7 +67,7 @@ public class ExchangeNetworkProxy implements StockExchange {
 
                 final OutputStream outputStream = sock.getOutputStream();
                 final Writer writer = new OutputStreamWriter(outputStream, ENCODING);
-                final PrintWriter printWriter = new PrintWriter(writer, true);
+                final PrintWriter printWriter = new PrintWriter(writer, true)
 
         ) {
 
@@ -77,7 +77,7 @@ public class ExchangeNetworkProxy implements StockExchange {
             response = br.readLine();
 
         } catch (final IOException e) {
-            logger.error("error sending command to exchage", e);
+            logger.error("error sending command to exchange", e);
         }
         return response;
     }
@@ -108,7 +108,7 @@ public class ExchangeNetworkProxy implements StockExchange {
      * Gets a current stock price
      *
      * @param ticker the ticker symbol for the stock
-     * @return the qoute, or null if unavailable
+     * @return the quote, or null if unavailable
      */
     @Override
     public Optional<StockQuote> getQuote(final String ticker) {
@@ -119,10 +119,10 @@ public class ExchangeNetworkProxy implements StockExchange {
         try {
             price = Integer.parseInt(response);
         } catch (final NumberFormatException nex) {
-            logger.warn("String to int conversion failed", response, nex);
+            logger.warn("String to int conversion failed: {}", response, nex);
 
         }
-        return (price >= 0) ? Optional.of(new StockQuote(ticker, price)) : Optional.<StockQuote>empty();
+        return (price >= 0) ? Optional.of(new StockQuote(ticker, price)) : Optional.empty();
     }
 
 
